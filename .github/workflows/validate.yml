@@ -1,36 +1,107 @@
-# This is a basic workflow to help you get started with Actions
+---
+name: "AzOps - Validate"
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main ]
+  #
+  # Pull Request
+  # Upon the creation of a new Pull Request in the root folder
+  # this workflow will execute.
+  #
+
   pull_request:
-    branches: [ main ]
+    paths:
+      - "root/**"
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+env:
+  #
+  # Credentials
+  #
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+  validate:
+    #
+    # Validate
+    #
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    name: "Validate"
+    runs-on: ubuntu-20.04
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      #
+      # Checkout
+      # Checks-out the repository
+      #
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      #
+      # Dependencies
+      # Install required runtime modules
+      #
+
+      - name: "Dependencies"
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          . .github/scripts/Install.ps1
+          Install-SourceModule -Repository "SomilGanguly/AzOps" -Branch "sogangul-AzOps-Testbranch"
+          $module = Get-Module -Name AzOps -ListAvailable
+          $data = Import-PowerShellDataFile -Path $module.Path
+          foreach ($dependency in $data.RequiredModules) {
+              Install-Module -Name $dependency.ModuleName -RequiredVersion $dependency.RequiredVersion -Force
+          }
+        shell: pwsh
+
+      #
+      # Connect
+      # Authenticate Azure context
+      #
+
+      - name: "Connect"
+        shell: pwsh
+        run: |
+          $credential = New-Object PSCredential -ArgumentList $env:ARM_CLIENT_ID, (ConvertTo-SecureString -String $env:ARM_CLIENT_SECRET -AsPlainText -Force)
+          Connect-AzAccount -TenantId $env:ARM_TENANT_ID -ServicePrincipal -Credential $credential -SubscriptionId $env:ARM_SUBSCRIPTION_ID
+
+      #
+      # Diff
+      # List index changes
+      #
+
+      - name: "Diff"
+        id: diff
+        shell: bash
+        run: |
+          echo $(git diff --name-status HEAD^ HEAD)
+          git diff --name-status HEAD^ HEAD > /tmp/diff.txt
+
+      #
+      # Validate
+      #
+
+      - name: "Validate"
+        shell: pwsh
+        run: |
+          Initialize-AzOpsEnvironment
+          Import-PSFConfig -Path settings.json -Schema MetaJson
+          $diff = Get-Content -Path /tmp/diff.txt
+          $module = Get-Module -Name AzOps
+          $module.Invoke({ Invoke-AzOpsPush -ChangeSet $diff -WhatIf })
+          Get-Job | Remove-Job -Force
+
+      #
+      # Results
+      #
+
+      - name: "Results"
+        shell: bash
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/OUTPUT.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
