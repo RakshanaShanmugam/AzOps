@@ -30,8 +30,6 @@ on:
   # Default: Every 6 hours
   #
 
-  schedule:
-    - cron: "*/1 * * * *"
 
   #
   # Workflow Run
@@ -187,10 +185,6 @@ jobs:
       - name: "Initialize"
         shell: pwsh
         run: |
-          Import-PSFConfig -Path settings.json -Schema MetaJson
-          if ($env:ACTION -eq "Enterprise-Scale Deployment") {
-            Set-PSFConfig -FullName AzOps.Core.SkipResource -Value $false
-          }
           Invoke-AzOpsPull -Rebuild
           Get-Job | Remove-Job -Force
         env:
