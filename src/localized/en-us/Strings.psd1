@@ -232,6 +232,7 @@
     'Remove-AzOpsDeployment.RemoveRoleAssignment.NoRoleAssignmentFound'             = 'Unable to find Role assignment with id {0} resulted in error {1}'# $roleAssignmentId,$resultsError
     'Remove-AzOpsDeployment.RemovePolicyAssignment.NoPolicyAssignmentFound'         = 'Unable to find Policy assignment with id {0} resulted in error {1}'# $policyAssignmentId,$resultsError
     'Remove-AzOpsDeployment.RemoveAssignment.MissingPermissionOnContext'            = 'This Context {0} dont have permission to remove on scope {1}'# $context.Account.id, $Id
+    'Remove-AzOpsDeployment.SkipUnsupportedResource'                                = 'Currently Role Assignment and PolicyAssignment resource deletion is supported. Hence skiping the Resouce deletion of file {0}'# $templateFilePath
 
     'Save-AzOpsManagementGroupChildren.Creating.Scope'                              = 'Creating scope object' #
     'Save-AzOpsManagementGroupChildren.Data.Directory'                              = 'Resolved state path directory: {0}' # $statepathDirectory
