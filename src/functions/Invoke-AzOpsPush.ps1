@@ -22,6 +22,10 @@ function Invoke-AzOpsPush {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string[]]
         $ChangeSet,
+        
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
+        [string[]]
+        $DeleteSetContents,
 
         [string]
         $StatePath = (Get-PSFConfigValue -FullName 'AzOps.Core.State'),
@@ -177,8 +181,17 @@ function Invoke-AzOpsPush {
             Write-PSFMessage @common -String 'Invoke-AzOpsPush.Change.AddModify.File' -StringValues $item
         }
         Write-PSFMessage @common -String 'Invoke-AzOpsPush.Change.Delete'
-        foreach ($item in $deleteSet) {
-            Write-PSFMessage @common -String 'Invoke-AzOpsPush.Change.Delete.File' -StringValues $item
+        if($DeleteSetContents -and $deleteSet) {
+            $DeleteSetContents = $DeleteSetContents -join "" -split "-- " | Where-Object {$_}
+            foreach ($item in $deleteSet) {
+                Write-PSFMessage @common -String 'Invoke-AzOpsPush.Change.Delete.File' -StringValues $item
+                foreach ($content in $DeleteSetContents) {
+                    if($content.Contains($item)){
+                        $jsonValue = $content.replace($item,"")
+                        Set-Content -Path $item -Value $jsonValue
+                    }
+                }
+            }
         }
         #endregion Categorize Input
 
