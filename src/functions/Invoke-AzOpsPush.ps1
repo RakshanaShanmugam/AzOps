@@ -190,8 +190,9 @@ function Invoke-AzOpsPush {
                         $jsonValue = $content.replace($item,"")
                         if(-not(Test-Path -Path (Split-Path -Path $item)))
                         {
-                            $folderName = Split-Path -Path $item -Parent
-                            New-Item -Path (Split-Path -Path $folderName -Parent) -ItemType Directory -Name (Split-Path -Path $folderName -Leaf)
+                            #$folderName = Split-Path -Path $item -Parent
+                            #New-Item -Path (Split-Path -Path $folderName -Parent) -ItemType Directory -Name (Split-Path -Path $folderName -Leaf)
+                            New-Item -Path (Split-Path -Path $item) -ItemType Directory | Out-Null
                         }
                         New-Item -Path $item -Value $jsonValue
                     }
