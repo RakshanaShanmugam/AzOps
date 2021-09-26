@@ -188,7 +188,12 @@ function Invoke-AzOpsPush {
                 foreach ($content in $DeleteSetContents) {
                     if($content.Contains($item)){
                         $jsonValue = $content.replace($item,"")
-                        Set-Content -Path $item -Value $jsonValue
+                        if(-not(Test-Path -Path (Split-Path -Path $item)))
+                        {
+                            $folderName = Split-Path -Path $item -Parent
+                            New-Item -Path (Split-Path -Path $folderName -Parent) -ItemType Directory -Name (Split-Path -Path $folderName -Leaf)
+                        }
+                        New-Item -Path $item -Value $jsonValue
                     }
                 }
             }
