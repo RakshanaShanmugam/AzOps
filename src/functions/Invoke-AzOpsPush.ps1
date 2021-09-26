@@ -260,6 +260,13 @@ function Invoke-AzOpsPush {
             if ($deletion.EndsWith(".parameters.json") -or $deletion.EndsWith(".bicep")) {
                 continue
             }
+            $templateContent = Get-Content $deletion | ConvertFrom-Json -AsHashtable
+            if(-not($templateContent.resources[0].type -eq "Microsoft.Authorization/roleAssignments" -or $templateContent.resources[0].type -eq "Microsoft.Authorization/policyAssignments")){
+                Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipUnsupportedResource' -StringValues $TemplateFilePath -Target $scopeObject
+                $results = "Currently Role Assignment and PolicyAssignment resource deletion is supported. Hence skiping the Resouce deletion of file $TemplateFilePath"
+                Set-AzOpsWhatIfOutput -results $results -removeAzOpsFlag $true
+                continue
+            }
             try { $scopeObject = New-AzOpsScope -Path $deletion -StatePath $StatePath -ErrorAction Stop }
             catch {
                 Write-PSFMessage @common -String 'Invoke-AzOpsPush.Scope.Failed' -StringValues $deletion, $StatePath -Target $deletion -ErrorRecord $_
