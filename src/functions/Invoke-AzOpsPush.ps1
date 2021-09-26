@@ -254,13 +254,14 @@ function Invoke-AzOpsPush {
 
             Resolve-ArmFileAssociation -ScopeObject $scopeObject -FilePath $addition -AzOpsMainTemplate $AzOpsMainTemplate
         }
-
+    Write-PSFMessage -Level Verbose -String 'Set-AzOpsWhatIfOutput.WhatIfResults' -StringValues $deleteSet
         $deletionList = foreach ($deletion in $deleteSet | Where-Object { $_ -match ((Get-Item $StatePath).Name) }) {
 
             if ($deletion.EndsWith(".parameters.json") -or $deletion.EndsWith(".bicep")) {
                 continue
             }
             $templateContent = Get-Content $deletion | ConvertFrom-Json -AsHashtable
+            Write-PSFMessage @common -String 'Invoke-AzOpsPush.Deployment.Required'
             if(-not($templateContent.resources[0].type -eq "Microsoft.Authorization/roleAssignments" -or $templateContent.resources[0].type -eq "Microsoft.Authorization/policyAssignments")){
                 Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipUnsupportedResource' -StringValues $TemplateFilePath -Target $scopeObject
                 $results = "Currently Role Assignment and PolicyAssignment resource deletion is supported. Hence skiping the Resouce deletion of file $TemplateFilePath"
@@ -285,6 +286,7 @@ function Invoke-AzOpsPush {
         $deploymentList | Select-Object $uniqueProperties -Unique | Sort-Object -Property TemplateParameterFilePath | New-AzOpsDeployment -WhatIf:$WhatIfPreference
 
         #Removal of RoleAssignments and PolicyAssignments
+        Write-PSFMessage -Level Verbose -String 'Set-AzOpsWhatIfOutput.WhatIfResults' -StringValues $deletionList
         $uniqueProperties = 'Scope', 'TemplateFilePath'
         $deletionList | Select-Object $uniqueProperties -Unique | Remove-AzOpsDeployment -WhatIf:$WhatIfPreference
         
