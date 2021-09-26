@@ -27,14 +27,15 @@ function Set-AzOpsWhatIfOutput {
         if(-not (Test-Path -Path '/tmp/OUTPUT.md')){
             New-Item -Path '/tmp/OUTPUT.md'
             New-Item -Path '/tmp/OUTPUT.json'
+            Add-Content -Path '/tmp/OUTPUT.md' -Value "WhatIf Results:"
         }
 
         if($removeAzOpsFlag){
-            $mdOutput = '{0}WhatIf Results Resource Deletion:{1}{0}' -f [environment]::NewLine, $results
+            $mdOutput = '{0}Resource Deletion:{1}{0}' -f [environment]::NewLine, $results
         }
         else{
             $resultJson = ($results.Changes | ConvertTo-Json -Depth 5)
-            $mdOutput = 'WhatIf Results:{0}```json{0}{1}{0}```{0}' -f [environment]::NewLine, $resultJson
+            $mdOutput = 'Resource Creation:{0}```json{0}{1}{0}```{0}' -f [environment]::NewLine, $resultJson
             Add-Content -Path '/tmp/OUTPUT.json' -Value $resultJson -WhatIf:$false
         }
         Add-Content -Path '/tmp/OUTPUT.md' -Value $mdOutput -WhatIf:$false
