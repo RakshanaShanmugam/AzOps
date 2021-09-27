@@ -201,7 +201,7 @@ function Invoke-AzOpsPush {
                     
                     if($path -like "$managemnetGroupName*"){
                         Write-PSFMessage -Level Warning -String 'InvokeAzOpsPush.ManagementGroups.NotSupported' -StringValues $item
-                        Continue
+                        break
                     }
                     else{
                         $deleteSetInclusionList += $item
