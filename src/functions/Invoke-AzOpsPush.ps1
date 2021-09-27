@@ -205,7 +205,6 @@ function Invoke-AzOpsPush {
                     }
                     else{
                         $deleteSetInclusionList += $item
-                        Write-PSFMessage -Level Warning -String 'Invoke-AzOpsPush.Scope.NotFound' -StringValues $deleteSetInclusionList
                     }
                 }
             }
