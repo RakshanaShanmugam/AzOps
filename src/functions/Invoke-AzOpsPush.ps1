@@ -190,11 +190,9 @@ function Invoke-AzOpsPush {
                         $jsonValue = $content.replace($item,"")
                         if(-not(Test-Path -Path (Split-Path -Path $item)))
                         {
-                            #$folderName = Split-Path -Path $item -Parent
-                            #New-Item -Path (Split-Path -Path $folderName -Parent) -ItemType Directory -Name (Split-Path -Path $folderName -Leaf)
                             New-Item -Path (Split-Path -Path $item) -ItemType Directory | Out-Null
                         }
-                        New-Item -Path $item -Value $jsonValue
+                        Set-Content -Path $item -Value $jsonValue
                     }
                 }
             }
@@ -254,13 +252,13 @@ function Invoke-AzOpsPush {
 
             Resolve-ArmFileAssociation -ScopeObject $scopeObject -FilePath $addition -AzOpsMainTemplate $AzOpsMainTemplate
         }
+        
         $deletionList = foreach ($deletion in $deleteSet | Where-Object { $_ -match ((Get-Item $StatePath).Name) }) {
-
+        
             if ($deletion.EndsWith(".parameters.json") -or $deletion.EndsWith(".bicep")) {
                 continue
             }
             $templateContent = Get-Content $deletion | ConvertFrom-Json -AsHashtable
-            Write-PSFMessage @common -String 'Invoke-AzOpsPush.Deployment.Required'
             if(-not($templateContent.resources[0].type -eq "Microsoft.Authorization/roleAssignments" -or $templateContent.resources[0].type -eq "Microsoft.Authorization/policyAssignments")){
                 Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipUnsupportedResource' -StringValues $TemplateFilePath -Target $scopeObject
                 continue
@@ -283,12 +281,6 @@ function Invoke-AzOpsPush {
         $deploymentList | Select-Object $uniqueProperties -Unique | Sort-Object -Property TemplateParameterFilePath | New-AzOpsDeployment -WhatIf:$WhatIfPreference
 
         #Removal of RoleAssignments and PolicyAssignments
-        foreach($d in $deletionList){
-             Write-PSFMessage -Level Verbose -String 'Set-AzOpsWhatIfOutput.WhatIfResults' -StringValues $d
-             Write-PSFMessage @common -String 'Invoke-AzOpsPush.Deployment.Required'
-        }
-        
-        #$deletionList | Where-Object {$_}
         $uniqueProperties = 'Scope', 'TemplateFilePath'
         $deletionList | Select-Object $uniqueProperties -Unique | Remove-AzOpsDeployment -WhatIf:$WhatIfPreference
         
