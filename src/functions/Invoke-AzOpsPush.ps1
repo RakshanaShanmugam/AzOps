@@ -287,6 +287,7 @@ function Invoke-AzOpsPush {
 
         #Removal of RoleAssignments and PolicyAssignments
         Write-PSFMessage -Level Verbose -String 'Set-AzOpsWhatIfOutput.WhatIfResults' -StringValues $deletionList
+        $deletionList | Where-Object {$_}
         $uniqueProperties = 'Scope', 'TemplateFilePath'
         $deletionList | Select-Object $uniqueProperties -Unique | Remove-AzOpsDeployment -WhatIf:$WhatIfPreference
         
