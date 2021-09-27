@@ -254,7 +254,6 @@ function Invoke-AzOpsPush {
 
             Resolve-ArmFileAssociation -ScopeObject $scopeObject -FilePath $addition -AzOpsMainTemplate $AzOpsMainTemplate
         }
-    Write-PSFMessage -Level Verbose -String 'Set-AzOpsWhatIfOutput.WhatIfResults' -StringValues $deleteSet
         $deletionList = foreach ($deletion in $deleteSet | Where-Object { $_ -match ((Get-Item $StatePath).Name) }) {
 
             if ($deletion.EndsWith(".parameters.json") -or $deletion.EndsWith(".bicep")) {
@@ -284,8 +283,12 @@ function Invoke-AzOpsPush {
         $deploymentList | Select-Object $uniqueProperties -Unique | Sort-Object -Property TemplateParameterFilePath | New-AzOpsDeployment -WhatIf:$WhatIfPreference
 
         #Removal of RoleAssignments and PolicyAssignments
-        Write-PSFMessage -Level Verbose -String 'Set-AzOpsWhatIfOutput.WhatIfResults' -StringValues $deletionList
-        $deletionList | Where-Object {$_}
+        foreach($d in $deletionList){
+             Write-PSFMessage -Level Verbose -String 'Set-AzOpsWhatIfOutput.WhatIfResults' -StringValues $d
+             Write-PSFMessage @common -String 'Invoke-AzOpsPush.Deployment.Required'
+        }
+        
+        #$deletionList | Where-Object {$_}
         $uniqueProperties = 'Scope', 'TemplateFilePath'
         $deletionList | Select-Object $uniqueProperties -Unique | Remove-AzOpsDeployment -WhatIf:$WhatIfPreference
         
