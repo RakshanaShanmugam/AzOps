@@ -185,7 +185,7 @@ function Invoke-AzOpsPush {
         Write-PSFMessage @common -String 'Invoke-AzOpsPush.Change.Delete'
         if($DeleteSetContents -and $deleteSet) {
             $allManagementGroups = (Get-AzManagementGroup).DisplayName
-            if(-not $allManagementGroups){
+            if($allManagementGroups -eq $null){
                 $deleteSetInclusionList = $deleteSet
             }
             foreach ($item in $deleteSet) {
