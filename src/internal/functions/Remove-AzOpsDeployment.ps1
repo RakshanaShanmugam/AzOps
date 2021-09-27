@@ -70,9 +70,9 @@ function Remove-AzOpsDeployment {
         #GetContext
         $context = Get-AzContext
 
-        
+        #region PolicyAssignment
         if($scopeObject.Resource -eq "policyAssignments"){
-            #region PolicyAssignment
+            
             #Validate
             $roleAssignmentPermissionCheck = $false
             $policyAssignment = Get-AzPolicyAssignment -Id $scopeObject.scope -ErrorAction Continue -ErrorVariable resultsError
@@ -110,11 +110,13 @@ function Remove-AzOpsDeployment {
             else{
                 Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipDueToWhatIf'
             }
-            #endregion PolicyAssignment
+            
         }
-        elseif($scopeObject.Resource -eq "roleAssignments")
+        #endregion PolicyAssignment
+        
+        #Region roleAssignments
+        if($scopeObject.Resource -eq "roleAssignments")
         {
-            #Region roleAssignments
             #Validate
             $roleAssignmentPermissionCheck = $false
             $roleAssignment = Get-AzRoleAssignment -ObjectId $templateContent.resources[0].properties.PrincipalId -RoleDefinitionName $templateContent.resources[0].properties.RoleDefinitionName -ErrorAction Continue -ErrorVariable roleAssignmentError | Where-Object {$_.RoleAssignmentId -match $scopeObject.Scope}
@@ -155,13 +157,8 @@ function Remove-AzOpsDeployment {
             {
                 Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipDueToWhatIf'
             }
-            #endregion Roleassignments
         }
-         else{
-            Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipUnsupportedResource' -StringValues $TemplateFilePath -Target $scopeObject
-            $results = "Currently Role Assignment and PolicyAssignment resource deletion is supported. Hence skiping the Resouce deletion of file $TemplateFilePath"
-            Set-AzOpsWhatIfOutput -results $results -removeAzOpsFlag $true
-        }
-        
+        #endregion Roleassignments
+                
     }
 }
