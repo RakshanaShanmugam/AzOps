@@ -260,7 +260,7 @@ function Invoke-AzOpsPush {
             }
             $templateContent = Get-Content $deletion | ConvertFrom-Json -AsHashtable
             if(-not($templateContent.resources[0].type -eq "Microsoft.Authorization/roleAssignments" -or $templateContent.resources[0].type -eq "Microsoft.Authorization/policyAssignments")){
-                Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipUnsupportedResource' -StringValues $TemplateFilePath -Target $scopeObject
+                Write-PSFMessage -Level Verbose -String 'Remove-AzOpsDeployment.SkipUnsupportedResource' -StringValues $deletion -Target $scopeObject
                 continue
             }
             try { $scopeObject = New-AzOpsScope -Path $deletion -StatePath $StatePath -ErrorAction Stop }
